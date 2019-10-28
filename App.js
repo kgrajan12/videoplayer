@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import Video from 'react-native-video'; /// alreadyimported this
 import Icon from 'react-native-vector-icons/FontAwesome5'; // and this
+import Orientation from 'react-native-orientation';
 
 const { width } = Dimensions.get('window');
 const samplevideo = require('./sample.mp4');
@@ -20,7 +21,8 @@ export default class App extends React.Component {
       currentTime: 0,
       duration: 0.1,
       paused: false,
-      overlay: false
+      overlay: false,
+      fullscreen: false
     };
   }
 
@@ -89,14 +91,25 @@ export default class App extends React.Component {
       this.overlayTimer = setTimeout(() => this.setState({ overlay: false }), 3000);
     })
   }
+
+  fullscreen = () => {
+    const { fullscreen } = this.state;
+    if(fullscreen) {
+      Orientation.lockToPortrait();
+    } else {
+      Orientation.lockToLandscape();
+    }
+    this.setState({ fullscreen: !fullscreen });
+  }
   
 
   render = () => {
-    const { currentTime, duration, paused, overlay } = this.state;
+    const { currentTime, duration, paused, overlay, fullscreen } = this.state;
     return (
       <View style={style.container}>
-        <View style={{ width, height: width * .6, backgroundColor: 'black' }}>
+        <View style={fullscreen ? style.fullscreenVideo : style.video}>
           <Video
+            fullscreen={fullscreen}
             paused={paused} // this will manage the pause and play
             ref={ref => this.video = ref}
             source={samplevideo}
@@ -115,7 +128,7 @@ export default class App extends React.Component {
               <View style={style.sliderCont}>
                 <View style={style.timer}>
                   <Text style={{ color: 'white' }}>{this.getTime(currentTime)}</Text>
-                  <Text style={{ color: 'white' }}>{this.getTime(duration)}</Text>
+                  <Text style={{ color: 'white' }}>{this.getTime(duration)}   <Icon onPress={this.fullscreen} name={fullscreen ? 'compress' : 'expand'} style={{ fontSize: 15 }} /></Text>
                 </View>
                 <Slider
                   // we want to add some param here
@@ -163,9 +176,15 @@ const style = StyleSheet.create({
     bottom: 0
   },
   timer: {
-    width,
+    width: '100%',
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingHorizontal: 5
+  },
+  video: { width, height: width * .6, backgroundColor: 'black' },
+  fullscreenVideo: {
+    backgroundColor: 'black',
+    ...StyleSheet.absoluteFill,
+    elevation: 1
   }
 });
